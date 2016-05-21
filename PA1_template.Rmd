@@ -1,25 +1,123 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+Reproducible Research Project 1
+================================
+
+The following assignment deals with activity data from personal monitoring devices, collected at 5 minute intervals daily, over the course of two months. The first step in analyzing this data will be reading in the file:
+
+```{r}
+setwd("/Users/maxsergeyev/Downloads")
+active <- read.csv("activity.csv")
+active1 <- active[complete.cases(active),]
+```
+
+**Question 1**
+
+  The following code will calculate the total number of steps per day using a tapply command:
+  
+```{r}
+x <- tapply(active1$steps, active1$date, sum)
+daysum <- x[!is.na(x)]
+```
+A histogram of the total number of steps taken per day follows:
+
+```{r}
+hist(daysum, xlab = "Steps", main = "Total Number of Steps Per Day")
+```
+  
+  As well as the mean number of steps taken per day:
+  
+```{r}
+mean(daysum)
+```
+
+And the median number of steps taken per day:
+
+```{r}
+median(daysum)
+```
+
+**Question 2**
+
+  We can also analyze the daily activity patterns over the course of the various 5 minute intervals. The following plot illustrates the changes in mean number of steps taken over the measured intervals: 
+  
+```{r}
+active1$intmean <- tapply(active1$steps, active1$interval, mean)
+plot(active1$interval, active1$intmean, type = "l", xlab = "Interval", ylab = "Steps", main = "Mean Number of Steps Per Interval")
+
+```
+ 
+  The interval that has the largest number of steps on average is interval 835.
+  
+```{r}
+active1[active1$intmean ==  max(active1$intmean), ]
+```
+
+**Question 3**
+ 
+  A number of rows in the data set contained missing values, left as NAs, particularly in the steps column. These missing values can be imputed using the integer mean for that particular mean to replace the NA
+  
+```{r}
+active$intmean <- tapply(active$steps, active$interval, mean, na.rm = TRUE)
+active$steps[is.na(active$steps)] = active$intmean
+```
+
+A similar histogram from Question 1 can be plotted now, displaying the mean number of steps per day now, however, now with the NA values replaced by the interval mean.
+
+```{r}
+hist(tapply(active$steps, active$date, sum), xlab = "Steps", main = "Total Steps Per Day With Imputed Values")
+
+```
+  
+  We can now compare the mean and median number of steps per day with imputed values as follows:
+  
+```{r}
+y <- tapply(active$steps, active$date, sum)
+newdaysum <- y[!is.na(y)]
+mean(newdaysum)
+median(newdaysum)
+
+```
+
+Compared to the mean and median number of steps per day without imputed values:
+
+```{r}
+mean(daysum)
+median(daysum)
+```
+
+We can see that replacing the values had no difference on the mean, and it should not since each value was replaced with the existing mean value, however, there was a small difference in the median value. In addition, there is a noticeable shift in the histogram towards the right after adding in the imputed values.
+
+**Question 4**
+  
+  Finally, we can compare activity patterns between measurements taken on weekends vs measurements taken on weekdays. To do this, we must create a new column in the data frame indicating whether each row pertains to a weekday or weekend measurement. First, we will download and load the timeDate package to access the isWeekday function. 
+  
+```{r}
+install.packages("timeDate", repos="http://cran.rstudio.com/")
+library(timeDate)
+```
+
+Now, using the isWeekday function we can create a column of TRUE/FALSE values indicating whether each row is a weekday (TRUE) or not (FALSE). Then, based on that column we can create a second factor column using the factor column and label the rows with a TRUE as "Weekday" and the rows with a FALSE as "Weekend" as follows:
+
+```{r}
+active$TFDay <- isWeekday(active$date)
+active$DayType <- factor(active$TFDay, levels = c(TRUE, FALSE), labels= c("Weekday", "Weekend"))
+
+```
+
+We can then create subsets for weekend and weekday data as follows:
+
+```{r}
+weekends <- active[active$DayType == "Weekend",]
+weekday <- active[active$DayType == "Weekday",]
+```
+
+Then we can plot the number of steps per interval for both weekends and weekdays:
+
+```{r}
+plot(weekday$interval, weekday$intmean, type = "l", xlab = "Interval", ylab = "Steps", main = "Weekday Number of Steps Per Interval", xlim = c(0, 2500), ylim = c(0, 500))
+```
+
+```{r}
+plot(weekends$interval, weekends$intmean, type = "l", xlab = "Interval", ylab = "Steps", main = "Weekend Number of Steps Per Interval", xlim = c(0, 2500), ylim = c(0, 500))
+```
 
 
-## Loading and preprocessing the data
-
-
-
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
